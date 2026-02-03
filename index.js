@@ -50,6 +50,11 @@ app.get("/test-db", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
+
 app.get("/", (req, res) => {
   res.send("Tuuchat server is running!");
+});
+
+app.listen(PORT, () => {
+  console.log(`Tuuchat server running on port ${PORT}`);
 });
