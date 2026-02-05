@@ -1,4 +1,4 @@
-Here is payment controller;
+
 
 const axios = require("axios");
 const crypto = require("crypto");
