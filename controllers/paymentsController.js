@@ -104,6 +104,5 @@ async function paystackWebhook(req, res) {
 }
 
 module.exports = {
-  initDepositCheckout,
-  paystackWebhook   // ✅ export
+  initDepositCheckout
 };
