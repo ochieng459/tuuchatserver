@@ -78,6 +78,25 @@ async function paystackWebhook(req, res) {
           const creatorShare = +(price * 0.8).toFixed(2);
           const platformShare = +(price * 0.2).toFixed(2);
 
+          // Debit buyer wallet (deposit should already be credited)
+          const buyerWalletRes = await client.query(
+            "SELECT balance FROM wallets WHERE user_id=$1 FOR UPDATE",
+            [user_id]
+          );
+          if (buyerWalletRes.rows.length === 0) {
+            await client.query("ROLLBACK");
+            return res.sendStatus(200);
+          }
+          const buyerBalance = parseFloat(buyerWalletRes.rows[0].balance);
+          if (buyerBalance < price) {
+            await client.query("ROLLBACK");
+            return res.sendStatus(200);
+          }
+          await client.query(
+            "UPDATE wallets SET balance = balance - $1, updated_at=now() WHERE user_id=$2",
+            [price, user_id]
+          );
+
           // Credit creator wallet (upsert)
           const creatorUpdate = await client.query(
             "UPDATE wallets SET balance = balance + $1, updated_at=now() WHERE user_id=$2",
