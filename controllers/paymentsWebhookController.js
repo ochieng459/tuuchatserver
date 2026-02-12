@@ -78,6 +78,12 @@ async function paystackWebhook(req, res) {
           const creatorShare = +(price * 0.8).toFixed(2);
           const platformShare = +(price * 0.2).toFixed(2);
 
+          // Deduct payer after deposit credit is applied on successful transaction.
+          await client.query(
+            "UPDATE wallets SET balance = balance - $1, updated_at=now() WHERE user_id=$2",
+            [price, user_id]
+          );
+
           // Credit creator wallet (upsert)
           const creatorUpdate = await client.query(
             "UPDATE wallets SET balance = balance + $1, updated_at=now() WHERE user_id=$2",
