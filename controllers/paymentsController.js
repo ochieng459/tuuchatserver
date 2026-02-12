@@ -13,6 +13,9 @@ async function initDepositCheckout(req, res) {
 
   try {
     const amountFloat = parseFloat(amount);
+    if (!Number.isFinite(amountFloat) || amountFloat <= 0) {
+      return res.status(400).json({ message: "Invalid amount" });
+    }
 
     // 1️⃣ Create pending transaction
     const txRes = await pool.query(
@@ -23,6 +26,17 @@ async function initDepositCheckout(req, res) {
     );
 
     const txId = txRes.rows[0].id;
+    const callbackBase = process.env.PAYSTACK_CALLBACK_URL;
+    let callbackUrl;
+    if (callbackBase) {
+      const url = new URL(callbackBase);
+      url.searchParams.set("reference", txId);
+      if (room_id) {
+        url.searchParams.set("room_id", room_id);
+      }
+      url.searchParams.set("user_id", user_id);
+      callbackUrl = url.toString();
+    }
 
     // 2️⃣ Paystack init
     const paystackRes = await axios.post(
@@ -36,6 +50,7 @@ async function initDepositCheckout(req, res) {
           room_id,   // ✅ add this
           tx_id: txId,
         },
+        ...(callbackUrl ? { callback_url: callbackUrl } : {}),
       },
       {
         headers: {

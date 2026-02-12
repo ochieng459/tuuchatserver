@@ -16,12 +16,25 @@ const app = express();
 //test
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://tuuchat.netlify.app"
-    ],
+    origin: (origin, callback) => {
+      // Allow Flutter Web localhost ports
+      if (
+        !origin ||
+        origin.startsWith("http://localhost:5000") ||
+        origin.startsWith("http://127.0.0.1") ||
+        origin === "https://tuuchat.netlify.app"
+      ) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
 
 
 // ✅ Webhook raw parser FIRST (before json parser)
@@ -58,3 +71,6 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Tuuchat server running on port ${PORT}`);
 });
+
+
+
